@@ -10,4 +10,5 @@ export type Ticket = {
   assignee: string | null;
   createdAt: string;
   description: string;
+  requesterEmail: string;
 };

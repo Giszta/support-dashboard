@@ -1,11 +1,11 @@
 type BadgeTone = "gray" | "blue" | "yellow" | "green" | "red";
 
 const toneClasses: Record<BadgeTone, string> = {
-  gray: "bg-zinc-100 text-zinc-700 border-zinc-200",
-  blue: "bg-blue-50 text-blue-700 border-blue-200",
-  yellow: "bg-amber-50 text-amber-700 border-amber-200",
-  green: "bg-emerald-50 text-emerald-700 border-emerald-200",
-  red: "bg-red-50 text-red-700 border-red-200",
+  gray: "border-zinc-200 bg-zinc-100 text-zinc-700",
+  blue: "border-blue-200 bg-blue-100 text-blue-700",
+  yellow: "border-amber-200 bg-amber-100 text-amber-700",
+  green: "border-emerald-200 bg-emerald-100 text-emerald-700",
+  red: "border-red-200 bg-red-100 text-red-700",
 };
 
 type StatusBadgeProps = {
@@ -16,7 +16,7 @@ type StatusBadgeProps = {
 export function StatusBadge({ children, tone = "gray" }: StatusBadgeProps) {
   return (
     <span
-      className={`inline-flex items-center rounded-full border px-2.5 py-1 text-xs font-medium ${toneClasses[tone]}`}
+      className={`inline-flex items-center rounded-full border px-2.5 py-1 text-xs font-medium capitalize ${toneClasses[tone]}`}
     >
       {children}
     </span>
