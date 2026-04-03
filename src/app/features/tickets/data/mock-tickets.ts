@@ -9,8 +9,9 @@ export const mockTickets: Ticket[] = [
     priority: "high",
     assignee: "Olivia Martin",
     createdAt: "2026-04-01T09:12:00Z",
+    requesterEmail: "maria@acme.com",
     description:
-      "Customer reports that they are unable to reset their password using the 'Forgot Password' feature. They receive an error message after submitting their email address. Please investigate and resolve this issue as soon as possible.",
+      "User reports that password reset emails are not being received. The issue started after the latest deployment and affects multiple login attempts.",
   },
   {
     id: "TCK-1002",
@@ -20,8 +21,9 @@ export const mockTickets: Ticket[] = [
     priority: "urgent",
     assignee: "James Carter",
     createdAt: "2026-04-02T14:30:00Z",
+    requesterEmail: "finance@globex.com",
     description:
-      "Customer has reported that the invoice they received does not match the amount they were expecting. They were charged $150 instead of $100 for their subscription. Please review their billing history and correct any discrepancies.",
+      "Customer reports that the charged amount on the latest invoice does not match the agreed enterprise plan pricing.",
   },
   {
     id: "TCK-1003",
@@ -31,8 +33,9 @@ export const mockTickets: Ticket[] = [
     priority: "medium",
     assignee: "Emma Wilson",
     createdAt: "2026-03-29T11:00:00Z",
+    requesterEmail: "ops@soylent.com",
     description:
-      "Customer has reported that the dashboard takes a long time to load, especially when accessing the analytics section. They are using the latest version of the app on a stable internet connection. Please investigate potential performance issues and optimize the loading times.",
+      "The analytics dashboard takes more than 12 seconds to render after login, especially for admin users with a larger dataset.",
   },
   {
     id: "TCK-1004",
@@ -42,8 +45,9 @@ export const mockTickets: Ticket[] = [
     priority: "medium",
     assignee: null,
     createdAt: "2026-04-03T08:45:00Z",
+    requesterEmail: "hr@initech.com",
     description:
-      "Customer is trying to invite new team members to their account but receives an error message saying 'Invitation failed. Please try again later.' They have attempted this multiple times with different email addresses. Please investigate the issue and provide a solution.",
+      "The invite flow fails on the final submission step and no invitation email is sent to newly added team members.",
   },
   {
     id: "TCK-1005",
@@ -53,8 +57,9 @@ export const mockTickets: Ticket[] = [
     priority: "low",
     assignee: "Sophia Lee",
     createdAt: "2026-03-27T16:10:00Z",
+    requesterEmail: "analyst@umbrella.com",
     description:
-      "Customer has reported that the 'Export to CSV' feature is not working. When they click the export button, nothing happens and no file is downloaded. They have tried this on multiple browsers with the same result. Please investigate and fix this issue.",
+      "Customer cannot export filtered reports to CSV. The export button shows a loading state and then resets without generating a file.",
   },
   {
     id: "TCK-1006",
@@ -64,7 +69,8 @@ export const mockTickets: Ticket[] = [
     priority: "high",
     assignee: "Noah Davis",
     createdAt: "2026-04-01T18:05:00Z",
+    requesterEmail: "security@wayne.com",
     description:
-      "Customer has reported that the 2FA verification code is delayed by several minutes, causing them to be locked out of their account. They have tried resending the code multiple times, but it still takes a long time to arrive. Please investigate potential issues with the 2FA system and resolve this as soon as possible.",
+      "Users report delayed delivery of 2FA codes via email, making login nearly impossible during peak usage hours.",
   },
 ];

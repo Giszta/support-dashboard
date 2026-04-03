@@ -1,6 +1,6 @@
+import Link from "next/link";
 import { Ticket } from "../types/ticket.types";
 import { StatusBadge } from "./status-badge";
-import Link from "next/link";
 
 type TicketsTableProps = {
   tickets: Ticket[];
@@ -86,7 +86,7 @@ export function TicketsTable({ tickets }: TicketsTableProps) {
                 <td className="px-4 py-4">
                   <Link
                     href={`/tickets/${ticket.id}`}
-                    className="flex flex-col"
+                    className="flex flex-col rounded-md focus:outline-none focus:ring-2 focus:ring-zinc-300"
                   >
                     <span className="text-xs font-medium text-zinc-500">
                       {ticket.id}
@@ -109,7 +109,7 @@ export function TicketsTable({ tickets }: TicketsTableProps) {
 
                 <td className="px-4 py-4">
                   <StatusBadge tone={getPriorityTone(ticket.priority)}>
-                    {ticket.priority}
+                    {formatLabel(ticket.priority)}
                   </StatusBadge>
                 </td>
 
