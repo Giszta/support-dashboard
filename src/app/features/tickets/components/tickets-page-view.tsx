@@ -5,6 +5,10 @@ import { Ticket } from "../types/ticket.types";
 import { filterTickets, TicketFilters } from "../lib/filter-tickets";
 import { TicketsFilters } from "./tickets-filters";
 import { TicketsTable } from "./tickets-table";
+import { TicketSort } from "../types/ticket-sort.types";
+import { sortTickets } from "../lib/sort-tickets";
+import { getPageCount, paginateTickets } from "../lib/paginate-tickets";
+import { TicketsPagination } from "./tickets-pagination";
 
 type TicketsPageViewProps = {
   tickets: Ticket[];
@@ -16,12 +20,68 @@ const initialFilters: TicketFilters = {
   priority: "all",
 };
 
+const initialSort: TicketSort = {
+  field: "createdAt",
+  direction: "desc",
+};
+
+const PAGE_SIZE = 8;
+
 export function TicketsPageView({ tickets }: TicketsPageViewProps) {
   const [filters, setFilters] = useState<TicketFilters>(initialFilters);
+  const [sort, setSort] = useState<TicketSort>(initialSort);
+  const [page, setPage] = useState(1);
 
   const filteredTickets = useMemo(() => {
     return filterTickets(tickets, filters);
   }, [tickets, filters]);
+
+  const sortedTickets = useMemo(() => {
+    return sortTickets(filteredTickets, sort);
+  }, [filteredTickets, sort]);
+
+  const pageCount = getPageCount(sortedTickets.length, PAGE_SIZE);
+
+  const safePage = Math.min(page, pageCount);
+
+  const paginatedTickets = useMemo(() => {
+    return paginateTickets({
+      tickets: sortedTickets,
+      page: safePage,
+      pageSize: PAGE_SIZE,
+    });
+  }, [sortedTickets, safePage]);
+
+  function handleFiltersChange(nextFilters: TicketFilters) {
+    setFilters(nextFilters);
+    setPage(1);
+  }
+
+  function handleSortChange(field: TicketSort["field"]) {
+    setSort((current) => {
+      if (current.field === field) {
+        return {
+          field,
+          direction: current.direction === "asc" ? "desc" : "asc",
+        };
+      }
+
+      return {
+        field,
+        direction: field === "createdAt" ? "desc" : "asc",
+      };
+    });
+
+    setPage(1);
+  }
+
+  function handlePageChange(nextPage: number) {
+    if (nextPage < 1 || nextPage > pageCount) {
+      return;
+    }
+
+    setPage(nextPage);
+  }
 
   return (
     <section className="space-y-6">
@@ -46,20 +106,34 @@ export function TicketsPageView({ tickets }: TicketsPageViewProps) {
         />
       </div>
 
-      <TicketsFilters filters={filters} onChange={setFilters} />
+      <TicketsFilters filters={filters} onChange={handleFiltersChange} />
 
       <div className="flex items-center justify-between">
         <p className="text-sm text-zinc-500">
           Showing{" "}
           <span className="font-medium text-zinc-900">
-            {filteredTickets.length}
+            {sortedTickets.length}
           </span>{" "}
           of <span className="font-medium text-zinc-900">{tickets.length}</span>{" "}
           tickets
         </p>
       </div>
 
-      <TicketsTable tickets={filteredTickets} />
+      <TicketsTable
+        tickets={paginatedTickets}
+        sort={sort}
+        onSortChange={handleSortChange}
+      />
+
+      {sortedTickets.length > 0 && (
+        <TicketsPagination
+          page={safePage}
+          pageCount={pageCount}
+          totalItems={sortedTickets.length}
+          pageSize={PAGE_SIZE}
+          onPageChange={handlePageChange}
+        />
+      )}
     </section>
   );
 }

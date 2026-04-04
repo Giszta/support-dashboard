@@ -1,9 +1,12 @@
 import Link from "next/link";
 import { Ticket } from "../types/ticket.types";
 import { StatusBadge } from "./status-badge";
+import { TicketSort, TicketSortField } from "../types/ticket-sort.types";
 
 type TicketsTableProps = {
   tickets: Ticket[];
+  sort: TicketSort;
+  onSortChange: (field: TicketSortField) => void;
 };
 
 function formatDate(dateString: string) {
@@ -48,7 +51,40 @@ function formatLabel(value: string) {
   return value.replaceAll("_", " ");
 }
 
-export function TicketsTable({ tickets }: TicketsTableProps) {
+function SortButton({
+  label,
+  field,
+  activeField,
+  direction,
+  onClick,
+}: {
+  label: string;
+  field: TicketSortField;
+  activeField: TicketSortField;
+  direction: TicketSort["direction"];
+  onClick: (field: TicketSortField) => void;
+}) {
+  const isActive = field === activeField;
+
+  return (
+    <button
+      type="button"
+      onClick={() => onClick(field)}
+      className="inline-flex items-center gap-1 font-medium text-zinc-500 transition hover:text-zinc-900"
+    >
+      <span>{label}</span>
+      <span className="text-xs text-zinc-400">
+        {isActive ? (direction === "asc" ? "↑" : "↓") : "↕"}
+      </span>
+    </button>
+  );
+}
+
+export function TicketsTable({
+  tickets,
+  sort,
+  onSortChange,
+}: TicketsTableProps) {
   if (tickets.length === 0) {
     return (
       <div className="rounded-2xl border border-dashed border-zinc-300 bg-white p-10 text-center">
@@ -70,10 +106,34 @@ export function TicketsTable({ tickets }: TicketsTableProps) {
             <tr className="text-xs uppercase tracking-wide text-zinc-500">
               <th className="px-4 py-3 font-medium">Ticket</th>
               <th className="px-4 py-3 font-medium">Customer</th>
-              <th className="px-4 py-3 font-medium">Status</th>
-              <th className="px-4 py-3 font-medium">Priority</th>
+              <th className="px-4 py-3 font-medium">
+                <SortButton
+                  label="Status"
+                  field="status"
+                  activeField={sort.field}
+                  direction={sort.direction}
+                  onClick={onSortChange}
+                />
+              </th>
+              <th className="px-4 py-3 font-medium">
+                <SortButton
+                  label="Priority"
+                  field="priority"
+                  activeField={sort.field}
+                  direction={sort.direction}
+                  onClick={onSortChange}
+                />
+              </th>
               <th className="px-4 py-3 font-medium">Assignee</th>
-              <th className="px-4 py-3 font-medium">Created</th>
+              <th className="px-4 py-3 font-medium">
+                <SortButton
+                  label="Created"
+                  field="createdAt"
+                  activeField={sort.field}
+                  direction={sort.direction}
+                  onClick={onSortChange}
+                />
+              </th>
             </tr>
           </thead>
 
