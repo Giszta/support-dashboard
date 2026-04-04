@@ -1,12 +1,14 @@
 import Link from "next/link";
 import { Ticket } from "../types/ticket.types";
-import { StatusBadge } from "./status-badge";
 import { TicketSort, TicketSortField } from "../types/ticket-sort.types";
+import { StatusBadge } from "./status-badge";
 
 type TicketsTableProps = {
   tickets: Ticket[];
   sort: TicketSort;
   onSortChange: (field: TicketSortField) => void;
+  onClearFilters: () => void;
+  hasActiveFilters: boolean;
 };
 
 function formatDate(dateString: string) {
@@ -15,6 +17,10 @@ function formatDate(dateString: string) {
     month: "short",
     year: "numeric",
   }).format(new Date(dateString));
+}
+
+function formatLabel(value: string) {
+  return value.replaceAll("_", " ");
 }
 
 function getStatusTone(status: Ticket["status"]) {
@@ -47,8 +53,16 @@ function getPriorityTone(priority: Ticket["priority"]) {
   }
 }
 
-function formatLabel(value: string) {
-  return value.replaceAll("_", " ");
+function getAriaSort(
+  field: TicketSortField,
+  activeField: TicketSortField,
+  direction: TicketSort["direction"],
+): "ascending" | "descending" | "none" {
+  if (field !== activeField) {
+    return "none";
+  }
+
+  return direction === "asc" ? "ascending" : "descending";
 }
 
 function SortButton({
@@ -65,16 +79,23 @@ function SortButton({
   onClick: (field: TicketSortField) => void;
 }) {
   const isActive = field === activeField;
+  const icon = isActive ? (direction === "asc" ? "↑" : "↓") : "↕";
+  const srDirection = isActive
+    ? direction === "asc"
+      ? "ascending"
+      : "descending"
+    : "not sorted";
 
   return (
     <button
       type="button"
       onClick={() => onClick(field)}
-      className="inline-flex items-center gap-1 font-medium text-zinc-500 transition hover:text-zinc-900"
+      className="inline-flex items-center gap-1 rounded-md px-1 py-1 font-medium text-zinc-500 transition hover:text-zinc-900 focus:outline-none focus:ring-2 focus:ring-zinc-300"
+      aria-label={`Sort by ${label.toLowerCase()}. Current state: ${srDirection}.`}
     >
       <span>{label}</span>
-      <span className="text-xs text-zinc-400">
-        {isActive ? (direction === "asc" ? "↑" : "↓") : "↕"}
+      <span aria-hidden="true" className="text-xs text-zinc-400">
+        {icon}
       </span>
     </button>
   );
@@ -84,6 +105,8 @@ export function TicketsTable({
   tickets,
   sort,
   onSortChange,
+  onClearFilters,
+  hasActiveFilters,
 }: TicketsTableProps) {
   if (tickets.length === 0) {
     return (
@@ -92,8 +115,18 @@ export function TicketsTable({
           No tickets found
         </h3>
         <p className="mt-2 text-sm text-zinc-500">
-          Try changing filters or search query.
+          We could not find any tickets matching the current filters.
         </p>
+
+        {hasActiveFilters && (
+          <button
+            type="button"
+            onClick={onClearFilters}
+            className="mt-4 inline-flex h-10 items-center justify-center rounded-xl border border-zinc-200 px-4 text-sm font-medium text-zinc-700 transition hover:bg-zinc-50"
+          >
+            Clear filters
+          </button>
+        )}
       </div>
     );
   }
@@ -106,7 +139,11 @@ export function TicketsTable({
             <tr className="text-xs uppercase tracking-wide text-zinc-500">
               <th className="px-4 py-3 font-medium">Ticket</th>
               <th className="px-4 py-3 font-medium">Customer</th>
-              <th className="px-4 py-3 font-medium">
+
+              <th
+                className="px-4 py-3 font-medium"
+                aria-sort={getAriaSort("status", sort.field, sort.direction)}
+              >
                 <SortButton
                   label="Status"
                   field="status"
@@ -115,7 +152,11 @@ export function TicketsTable({
                   onClick={onSortChange}
                 />
               </th>
-              <th className="px-4 py-3 font-medium">
+
+              <th
+                className="px-4 py-3 font-medium"
+                aria-sort={getAriaSort("priority", sort.field, sort.direction)}
+              >
                 <SortButton
                   label="Priority"
                   field="priority"
@@ -124,8 +165,13 @@ export function TicketsTable({
                   onClick={onSortChange}
                 />
               </th>
+
               <th className="px-4 py-3 font-medium">Assignee</th>
-              <th className="px-4 py-3 font-medium">
+
+              <th
+                className="px-4 py-3 font-medium"
+                aria-sort={getAriaSort("createdAt", sort.field, sort.direction)}
+              >
                 <SortButton
                   label="Created"
                   field="createdAt"
@@ -141,17 +187,17 @@ export function TicketsTable({
             {tickets.map((ticket) => (
               <tr
                 key={ticket.id}
-                className="border-b border-zinc-100 last:border-b-0 hover:bg-zinc-50/80"
+                className="border-b border-zinc-100 align-top transition hover:bg-zinc-50/80 last:border-b-0"
               >
                 <td className="px-4 py-4">
                   <Link
                     href={`/tickets/${ticket.id}`}
-                    className="flex flex-col rounded-md focus:outline-none focus:ring-2 focus:ring-zinc-300"
+                    className="group flex flex-col rounded-md focus:outline-none focus:ring-2 focus:ring-zinc-300"
                   >
                     <span className="text-xs font-medium text-zinc-500">
                       {ticket.id}
                     </span>
-                    <span className="text-sm font-medium text-zinc-900 hover:underline">
+                    <span className="text-sm font-medium text-zinc-900 group-hover:underline">
                       {ticket.subject}
                     </span>
                   </Link>
