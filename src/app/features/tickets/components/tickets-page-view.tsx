@@ -1,36 +1,43 @@
 "use client";
 
-import { useMemo, useState } from "react";
-import { Ticket } from "../types/ticket.types";
+import { useMemo } from "react";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { filterTickets, TicketFilters } from "../lib/filter-tickets";
-import { TicketsFilters } from "./tickets-filters";
-import { TicketsTable } from "./tickets-table";
-import { TicketSort } from "../types/ticket-sort.types";
-import { sortTickets } from "../lib/sort-tickets";
 import { getPageCount, paginateTickets } from "../lib/paginate-tickets";
+import { sortTickets } from "../lib/sort-tickets";
+import {
+  buildTicketsQueryString,
+  defaultTicketsQueryState,
+  parseTicketsQueryState,
+  TicketsQueryState,
+} from "../lib/ticket-query-state";
+import { TicketSort } from "../types/ticket-sort.types";
+import { Ticket } from "../types/ticket.types";
+import { TicketsFilters } from "./tickets-filters";
 import { TicketsPagination } from "./tickets-pagination";
+import { TicketsTable } from "./tickets-table";
 
 type TicketsPageViewProps = {
   tickets: Ticket[];
 };
 
-const initialFilters: TicketFilters = {
-  query: "",
-  status: "all",
-  priority: "all",
-};
-
-const initialSort: TicketSort = {
-  field: "createdAt",
-  direction: "desc",
-};
-
 const PAGE_SIZE = 8;
 
 export function TicketsPageView({ tickets }: TicketsPageViewProps) {
-  const [filters, setFilters] = useState<TicketFilters>(initialFilters);
-  const [sort, setSort] = useState<TicketSort>(initialSort);
-  const [page, setPage] = useState(1);
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+
+  const queryState = useMemo(() => {
+    return parseTicketsQueryState(searchParams);
+  }, [searchParams]);
+
+  const { filters, sort, page } = queryState;
+
+  const hasActiveFilters =
+    filters.query.trim().length > 0 ||
+    filters.status !== "all" ||
+    filters.priority !== "all";
 
   const filteredTickets = useMemo(() => {
     return filterTickets(tickets, filters);
@@ -41,7 +48,6 @@ export function TicketsPageView({ tickets }: TicketsPageViewProps) {
   }, [filteredTickets, sort]);
 
   const pageCount = getPageCount(sortedTickets.length, PAGE_SIZE);
-
   const safePage = Math.min(page, pageCount);
 
   const paginatedTickets = useMemo(() => {
@@ -52,27 +58,49 @@ export function TicketsPageView({ tickets }: TicketsPageViewProps) {
     });
   }, [sortedTickets, safePage]);
 
+  function updateQueryState(nextState: TicketsQueryState) {
+    const queryString = buildTicketsQueryString({
+      currentSearchParams: searchParams,
+      nextState,
+    });
+
+    const nextUrl = queryString ? `${pathname}?${queryString}` : pathname;
+    router.push(nextUrl);
+  }
+
   function handleFiltersChange(nextFilters: TicketFilters) {
-    setFilters(nextFilters);
-    setPage(1);
+    updateQueryState({
+      filters: nextFilters,
+      sort,
+      page: 1,
+    });
+  }
+
+  function handleResetFilters() {
+    updateQueryState({
+      filters: defaultTicketsQueryState.filters,
+      sort,
+      page: 1,
+    });
   }
 
   function handleSortChange(field: TicketSort["field"]) {
-    setSort((current) => {
-      if (current.field === field) {
-        return {
-          field,
-          direction: current.direction === "asc" ? "desc" : "asc",
-        };
-      }
+    const nextSort: TicketSort =
+      sort.field === field
+        ? {
+            field,
+            direction: sort.direction === "asc" ? "desc" : "asc",
+          }
+        : {
+            field,
+            direction: field === "createdAt" ? "desc" : "asc",
+          };
 
-      return {
-        field,
-        direction: field === "createdAt" ? "desc" : "asc",
-      };
+    updateQueryState({
+      filters,
+      sort: nextSort,
+      page: 1,
     });
-
-    setPage(1);
   }
 
   function handlePageChange(nextPage: number) {
@@ -80,7 +108,11 @@ export function TicketsPageView({ tickets }: TicketsPageViewProps) {
       return;
     }
 
-    setPage(nextPage);
+    updateQueryState({
+      filters,
+      sort,
+      page: nextPage,
+    });
   }
 
   return (
@@ -106,9 +138,14 @@ export function TicketsPageView({ tickets }: TicketsPageViewProps) {
         />
       </div>
 
-      <TicketsFilters filters={filters} onChange={handleFiltersChange} />
+      <TicketsFilters
+        filters={filters}
+        onChange={handleFiltersChange}
+        onReset={handleResetFilters}
+        hasActiveFilters={hasActiveFilters}
+      />
 
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
         <p className="text-sm text-zinc-500">
           Showing{" "}
           <span className="font-medium text-zinc-900">
@@ -117,12 +154,26 @@ export function TicketsPageView({ tickets }: TicketsPageViewProps) {
           of <span className="font-medium text-zinc-900">{tickets.length}</span>{" "}
           tickets
         </p>
+
+        <p className="text-sm text-zinc-500">
+          Sorted by{" "}
+          <span className="font-medium capitalize text-zinc-900">
+            {sort.field === "createdAt" ? "created date" : sort.field}
+          </span>{" "}
+          (
+          <span className="font-medium text-zinc-900">
+            {sort.direction === "asc" ? "ascending" : "descending"}
+          </span>
+          )
+        </p>
       </div>
 
       <TicketsTable
         tickets={paginatedTickets}
         sort={sort}
         onSortChange={handleSortChange}
+        onClearFilters={handleResetFilters}
+        hasActiveFilters={hasActiveFilters}
       />
 
       {sortedTickets.length > 0 && (
